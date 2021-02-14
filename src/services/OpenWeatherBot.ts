@@ -22,13 +22,14 @@ export class OpenWeatherBot {
    * @param message the incoming message
    */
   public handleMessage(message: any): void {
+    if (!(message.text as string).includes(this.bot.user)) {
+      return;
+    }
+
     const text = (message.text as string).replace(this.bot.user, "").trim();
 
-    if (text.length === 0 || text.includes("hilfe")) {
-      const response =
-        "Du möchtest wissen, wie das Wetter ist?\n\n" +
-        `- Sende "@${this.bot.user} London" um eine Wochenvorhersage für einen Ort zu erhalten`;
-      this.bot.sendText(response, message.token);
+    if (text.length === 0 || /\bhilfe\b/i.test(text)) {
+      this.showHelp(message.token);
     } else {
       this.getForecast(text)
         .then((forecast) => this.bot.sendText(forecast, message.token))
@@ -64,12 +65,19 @@ export class OpenWeatherBot {
     const language = "de";
 
     try {
-      const location = await this.openWeatherClient.getCoordinates(
+      const locations = await this.openWeatherClient.getCoordinates(
         locationName
       );
+
+      if (locations.length === 0) {
+        throw new Error(
+          `Ich kenne "${locationName}" leider nicht. 😟 Hast du dich vielleicht vertippt?\nAnsonsten probiere es mal mit dem nächstgrößeren Ort.`
+        );
+      }
+
       const weatherData = await this.openWeatherClient.getCurrentWeatherData(
-        location[0].lat,
-        location[0].lon,
+        locations[0].lat,
+        locations[0].lon,
         "metric",
         language
       );
@@ -83,11 +91,12 @@ export class OpenWeatherBot {
         dailyForecasts.join("\n");
       return response.replace(
         "{{LOCATION}}",
-        `${location[0].name}, ${location[0].country}`
+        `${locations[0].name}, ${locations[0].country}`
       );
-    } catch (e) {
+    } catch (error) {
       // TODO: provide meaningful error message
-      throw new Error();
+      console.error(error);
+      throw error;
     }
   }
 
@@ -173,5 +182,17 @@ export class OpenWeatherBot {
     const description = day.weather[0].description;
 
     return `${date}\t ${symbol}\t ${minTemperature} / ${maxTemperature}${Units.metric.temperature}\t ${description}`;
+  }
+
+  /**
+   * Sends an error message to the specified conversation.
+   *
+   * @param conversationToken The token of the conversation
+   */
+  private showHelp(conversationToken: string): void {
+    const response =
+      "Du möchtest wissen, wie das Wetter ist?\n\n" +
+      `- Sende "@${this.bot.user} London" um eine Wochenvorhersage für einen Ort zu erhalten`;
+    this.bot.sendText(response, conversationToken);
   }
 }

@@ -9,8 +9,6 @@
  * - German
  *
  * TODO:
- * - write JSDoc
- * - bundle with rollup.js
  * - Poll conversations and join new ones (except 'changelog')
  * - Send welcome message (including instructions) when joining a new conversation
  * - Leave conversation, if the bot is the only member of it
@@ -89,8 +87,8 @@ async function getConversations(
     if (response.type === "response") {
       conversations = response.data;
     }
-  } catch (e) {
-    console.error(e);
+  } catch (error) {
+    console.error(error);
   }
 
   return conversations;
