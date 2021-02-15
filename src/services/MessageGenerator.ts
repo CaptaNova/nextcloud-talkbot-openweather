@@ -35,7 +35,7 @@ export class MessageGenerator {
    * @since 0.1.0
    */
   public generateForecast(properties: MessageProperties): string {
-    const daily = properties.daily!.map((day: any) =>
+    const daily = (properties.daily || []).map((day) =>
       this.generateDailyForecast(day)
     );
 
@@ -82,6 +82,7 @@ export class MessageGenerator {
    * @param dailyProperties The forecast data for a day
    * @returns The forecast for single day
    */
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   private generateDailyForecast(dailyProperties: any): string {
     const date = this.formatDate(dailyProperties.date, "de");
     const description = dailyProperties.description;
@@ -91,6 +92,7 @@ export class MessageGenerator {
 
     return `${date}\t ${icon}\t ${minTemperature} / ${maxTemperature}${Units.metric.temperature}\t ${description}`;
   }
+  /* eslint-enable @typescript-eslint/no-explicit-any */
 
   /**
    * Returns a UTF8 emoji representation of the specified weather icon.

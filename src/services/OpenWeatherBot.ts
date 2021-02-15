@@ -1,4 +1,5 @@
 import NextcloudTalkBot from "nextcloud-talk-bot";
+import { Message } from "../types/nextcloud-talk";
 import { MessageGenerator } from "./MessageGenerator";
 import { MessageParser } from "./MessageParser";
 import { OpenWeatherClient } from "./OpenWeatherClient";
@@ -28,7 +29,7 @@ export class OpenWeatherBot {
    * @param message the incoming message
    * @since 0.1.0
    */
-  public handleMessage(message: any): void {
+  public handleMessage(message: Message & { text: string }): void {
     const entities = this.messageParser.parse(message.text);
 
     if (entities.intent === "none") {

@@ -31,13 +31,13 @@ import {
 } from "./services";
 import { Conversation, ConversationType } from "./types/nextcloud-talk";
 
-process.on("uncaughtException", (err) => {
-  console.error(`Uncaught exception: ${err.message}`);
+process.on("uncaughtException", (error) => {
+  console.error(`Uncaught exception: ${error.message}`);
   process.exit(1);
 });
 
-process.on("unhandledRejection", (err: any, promise) => {
-  console.error("Unhandled rejection at ", promise, `reason: ${err.message}`);
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled rejection at ", promise, `reason: ${reason}`);
   process.exit(1);
 });
 

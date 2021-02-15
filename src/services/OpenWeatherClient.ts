@@ -33,7 +33,7 @@ export class OpenWeatherClient {
     latitude: number,
     longitude: number,
     units: "metric" | "imperial" | "standard" = "standard",
-    language: string = "de"
+    language = "de"
   ): Promise<CurrentWeatherData> {
     try {
       const response = await axios.get(ONE_CALL_API, {

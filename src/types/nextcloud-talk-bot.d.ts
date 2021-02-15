@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 declare module "nextcloud-talk-bot" {
   class NextcloudTalkBot {
     user: string;
 
     constructor(options = {});
 
-    on(event: "message" | "system", listener: (message: any) => void);
+    on(event: "message" | "system", listener: (message: any) => void): void;
 
     getChannel(channelId: string, join?: boolean): any;
 
@@ -14,7 +15,7 @@ declare module "nextcloud-talk-bot" {
 
     onText(
       regxt: RegExp | string,
-      callback: Function,
+      callback: (message: any) => void,
       channelId?: string
     ): this;
 

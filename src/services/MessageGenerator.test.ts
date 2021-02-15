@@ -76,7 +76,7 @@ describe(MessageGenerator.name, () => {
     });
 
     it("includes the description", () => {
-      expect(message).toContain(properties.daily![0].description);
+      expect(message).toContain(properties.daily![0].description); // eslint-disable-line @typescript-eslint/no-non-null-assertion
     });
   });
 });

@@ -19,8 +19,8 @@ export interface CurrentWeatherData {
     wind_speed: number;
     wind_gust?: number;
     wind_deg: number;
-    rain?: any;
-    snow?: any;
+    rain?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+    snow?: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     weather: [
       {
         id: number;
@@ -30,8 +30,8 @@ export interface CurrentWeatherData {
       }
     ];
   };
-  minutely: any;
-  hourly: any;
+  minutely: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  hourly: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   daily: DailyForecast[];
   alerts?: WeatherAlert[];
 }

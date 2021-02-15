@@ -151,10 +151,10 @@ export interface Message {
   message: string;
 
   /** Message parameters for message (see Rich Object String) */
-  messageParameters: any[];
+  messageParameters: [];
 
   /** See Parent data below */
-  parent?: any[];
+  parent?: [];
 }
 
 export enum ActorType {
