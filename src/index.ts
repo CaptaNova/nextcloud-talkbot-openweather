@@ -9,16 +9,23 @@
  * - German
  *
  * TODO:
+ * - Refactor (MessageParser, MessageGenerator)
+ * - Show current weather
+ * - Write README (feature description (screenshot), setup instructions, contributing, versioning, license)
+ * - Setup ESLint
+ * - Setup Prettier
+ * - Write tests
+ * - Logging
  * - Poll conversations and join new ones (except 'changelog')
  * - Send welcome message (including instructions) when joining a new conversation
  * - Leave conversation, if the bot is the only member of it
+ * - Set default location
  * - Internationalization
  */
 
 import * as dotenv from "dotenv";
 import NextcloudTalkBot from "nextcloud-talk-bot";
-import { OpenWeatherBot } from "./services/OpenWeatherBot";
-import { OpenWeatherClient } from "./services/OpenWeatherClient";
+import { MessageParser, OpenWeatherBot, OpenWeatherClient } from "./services";
 import { Conversation, ConversationType } from "./types/nextcloud-talk";
 
 process.on("uncaughtException", (err) => {
@@ -41,7 +48,8 @@ const bot = new NextcloudTalkBot({
 const openWeatherClient = new OpenWeatherClient(
   process.env.OPEN_WEATHER_API_KEY!
 );
-const weatherBot = new OpenWeatherBot(bot, openWeatherClient);
+const messageParser = new MessageParser(bot.user);
+const weatherBot = new OpenWeatherBot(bot, openWeatherClient, messageParser);
 
 bot.on("message", (msg) => weatherBot.handleMessage(msg));
 joinConversations(bot);

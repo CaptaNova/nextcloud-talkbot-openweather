@@ -1,5 +1,7 @@
 import NextcloudTalkBot from "nextcloud-talk-bot";
-import { DailyForecast, OpenWeatherClient, Units } from "./OpenWeatherClient";
+import { DailyForecast } from "../types/open-weather";
+import { MessageParser } from "./MessageParser";
+import { OpenWeatherClient, Units } from "./OpenWeatherClient";
 
 /**
  * This class contains the bots logic.
@@ -13,7 +15,8 @@ export class OpenWeatherBot {
    */
   public constructor(
     private bot: NextcloudTalkBot,
-    private openWeatherClient: OpenWeatherClient
+    private openWeatherClient: OpenWeatherClient,
+    private messageParser: MessageParser
   ) {}
 
   /**
@@ -22,19 +25,20 @@ export class OpenWeatherBot {
    * @param message the incoming message
    */
   public handleMessage(message: any): void {
-    if (!(message.text as string).includes(this.bot.user)) {
+    const entities = this.messageParser.parse(message.text);
+
+    if (entities.intent === "none") {
       return;
     }
 
-    const text = (message.text as string).replace(this.bot.user, "").trim();
-
-    if (text.length === 0 || /\bhilfe\b/i.test(text)) {
-      this.showHelp(message.token);
-    } else {
-      this.getForecast(text)
+    if (entities.intent === "forecast_weather" && entities.location) {
+      this.getForecast(entities.location)
         .then((forecast) => this.bot.sendText(forecast, message.token))
-        .catch((err) => this.handleError(message.token, err.message));
+        .catch((error) => this.handleError(message.token, error.message));
+      return;
     }
+
+    this.showHelp(message.token);
   }
 
   /**
