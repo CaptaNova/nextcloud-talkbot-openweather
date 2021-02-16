@@ -9,10 +9,8 @@
  * - German
  *
  * TODO:
- * - Setup ESLint
- * - Setup Prettier
- * - Write README (feature description (screenshot), setup instructions, architecture, contributing, versioning, license)
  * - Show current weather
+ * - Write README (feature description (screenshot), setup instructions, architecture, contributing, versioning, license)
  * - Logging
  * - Poll conversations and join new ones (except 'changelog')
  * - Send welcome message (including instructions) when joining a new conversation
@@ -21,7 +19,6 @@
  * - Internationalization
  */
 
-import * as dotenv from "dotenv";
 import NextcloudTalkBot from "nextcloud-talk-bot";
 import {
   MessageGenerator,
@@ -30,6 +27,12 @@ import {
   OpenWeatherClient,
 } from "./services";
 import { Conversation, ConversationType } from "./types/nextcloud-talk";
+import {
+  NEXTCLOUD_URI,
+  NEXTCLOUD_USER,
+  NEXTCLOUD_PASSWORD,
+  OPEN_WEATHER_API_KEY,
+} from "./util/secrets";
 
 process.on("uncaughtException", (error) => {
   console.error(`Uncaught exception: ${error.message}`);
@@ -41,16 +44,15 @@ process.on("unhandledRejection", (reason, promise) => {
   process.exit(1);
 });
 
-dotenv.config();
-
 const bot = new NextcloudTalkBot({
+  server: NEXTCLOUD_URI,
+  user: NEXTCLOUD_USER,
+  pass: NEXTCLOUD_PASSWORD,
   autoJoin: false,
   // setReadMarker: true
   debug: false,
 });
-const openWeatherClient = new OpenWeatherClient(
-  process.env.OPEN_WEATHER_API_KEY!
-);
+const openWeatherClient = new OpenWeatherClient(OPEN_WEATHER_API_KEY!); // eslint-disable-line @typescript-eslint/no-non-null-assertion
 const messageParser = new MessageParser(bot.user);
 const messageGenerator = new MessageGenerator();
 const weatherBot = new OpenWeatherBot(
