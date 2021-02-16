@@ -1,4 +1,4 @@
-import { MessageEntities } from "../types/MessageEntities";
+import { MessageEntities } from "../models";
 
 /**
  * A message parser to extract the intents and entities from a message.

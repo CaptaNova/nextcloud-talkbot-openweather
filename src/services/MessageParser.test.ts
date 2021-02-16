@@ -1,4 +1,4 @@
-import { MessageEntities } from "../types/MessageEntities";
+import { MessageEntities } from "../models";
 import { MessageParser } from "./MessageParser";
 
 const botUserName = "someBotUserName";

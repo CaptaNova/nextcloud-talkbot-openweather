@@ -1,4 +1,4 @@
-import { MessageProperties } from "../types/MessageProperties";
+import { MessageProperties } from "../models";
 import { MessageGenerator } from "./MessageGenerator";
 
 const botUserName = "someBotUserName";

@@ -1,4 +1,5 @@
-import { MessageProperties } from "../types/MessageProperties";
+import { WEATHER_ICONS } from "../constants";
+import { MessageProperties } from "../models";
 import { Units } from "./OpenWeatherClient";
 
 /**
@@ -7,10 +8,6 @@ import { Units } from "./OpenWeatherClient";
  */
 export class MessageGenerator {
   private readonly weatherIcons = new Map<string, string>();
-
-  public constructor() {
-    this.initWeatherIcons();
-  }
 
   /**
    * Creates an error message.
@@ -101,39 +98,6 @@ export class MessageGenerator {
    * @returns An UTF8 emoji
    */
   private getWeatherIcon(icon: string): string {
-    return this.weatherIcons.get(icon) || "🌈";
-  }
-
-  /**
-   * Initializes the internal weather icon map
-   */
-  private initWeatherIcons(): void {
-    // clear sky
-    this.weatherIcons.set("01d", "☀️");
-    this.weatherIcons.set("01n", "🌌");
-    // few clouds
-    this.weatherIcons.set("02d", "⛅");
-    this.weatherIcons.set("02n", "☁️");
-    // scattered clouds
-    this.weatherIcons.set("03d", "☁️");
-    this.weatherIcons.set("03n", "☁️");
-    // broken clouds
-    this.weatherIcons.set("04d", "☁️");
-    this.weatherIcons.set("04n", "☁️");
-    // shower rain
-    this.weatherIcons.set("09d", "🌧️");
-    this.weatherIcons.set("09n", "🌧️");
-    // rain
-    this.weatherIcons.set("10d", "🌦️");
-    this.weatherIcons.set("10n", "🌦️");
-    // thunderstorm
-    this.weatherIcons.set("11d", "🌩️");
-    this.weatherIcons.set("11n", "🌩️");
-    // snow
-    this.weatherIcons.set("13d", "❄️");
-    this.weatherIcons.set("13n", "❄️");
-    // mist
-    this.weatherIcons.set("50d", "🌫");
-    this.weatherIcons.set("50n", "🌫");
+    return WEATHER_ICONS[icon] || "🌈";
   }
 }
