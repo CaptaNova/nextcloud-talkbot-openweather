@@ -1,4 +1,4 @@
-import { MessageEntities } from "../models";
+import { Intent, MessageEntities } from "../models";
 
 /**
  * A message parser to extract the intents and entities from a message.
@@ -16,15 +16,27 @@ export class MessageParser {
    */
   public parse(messageText: string): MessageEntities {
     if (!messageText.includes(this.botUserName)) {
-      return { intent: "none" };
+      return { utterance: messageText, intent: Intent.None, entities: {} };
     }
 
     const text = this.cleanText(messageText);
 
-    if (text.length === 0 || /\bhilfe\b/i.test(text)) {
-      return { intent: "show_help" };
+    const match = /^(?<command>hilfe\b).*$|^((?<date>heute\b)?\s*(?:in\s*)?(?<location>.*))$/gi.exec(
+      text
+    );
+    const command = (match?.groups?.command || "").toLowerCase();
+
+    if (text.length === 0 || !match || !match.groups || command === "hilfe") {
+      return { utterance: text, intent: Intent.Help, entities: {} };
     }
-    return { intent: "forecast_weather", location: text };
+
+    return {
+      utterance: text,
+      intent: match.groups.date ? Intent.WeatherToday : Intent.WeatherForecast,
+      entities: {
+        location: match.groups.location,
+      },
+    };
   }
 
   /**

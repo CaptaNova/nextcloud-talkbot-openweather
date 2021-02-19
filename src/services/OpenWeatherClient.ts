@@ -41,7 +41,7 @@ export class OpenWeatherClient {
           lat: latitude,
           lon: longitude,
           appId: this.apiKey,
-          exclude: "minutely,hourly",
+          exclude: "hourly",
           units: units,
           lang: language,
         },

@@ -1,7 +1,13 @@
-export interface MessageEntities {
-  /** The intent of the message */
-  intent: "none" | "forecast_weather" | "show_help";
+import { Intent } from "./Intent";
 
-  /** The requested location */
-  location?: string;
+export interface MessageEntities {
+  utterance: string;
+
+  /** The intent of the message */
+  intent: Intent;
+
+  entities: {
+    /** The requested location */
+    location?: string;
+  };
 }

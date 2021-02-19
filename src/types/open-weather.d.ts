@@ -30,7 +30,7 @@ export interface CurrentWeatherData {
       }
     ];
   };
-  minutely: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  minutely: MinutelyForecast[];
   hourly: any; // eslint-disable-line @typescript-eslint/no-explicit-any
   daily: DailyForecast[];
   alerts?: WeatherAlert[];
@@ -73,21 +73,28 @@ export interface DailyForecast {
   uvi: number;
 }
 
+/** Minutely forecast weather data */
+export interface MinutelyForecast {
+  /** Time of the forecasted data, unix, UTC */
+  dt: number;
+
+  /** Precipitation volume, mm */
+  precipitation: number;
+}
+
 /** Direct geocoding, containing the geographical coordinates of a named location */
 export interface DirectGeocoding {
   /** Name of the found location */
   name: string;
 
   /** Name of the found location in different languages. The list of names can be different for different locations */
-  local_names: [
-    {
-      [languageCode: string]: string;
-      /** Internal field */
-      ascii: string;
-      /** Internal field */
-      feature_name: string;
-    }
-  ];
+  local_names: {
+    [languageCode: string]: string;
+    /** Internal field */
+    ascii: string;
+    /** Internal field */
+    feature_name: string;
+  };
 
   /** Geographical coordinates of the found location (latitude) */
   lat: number;

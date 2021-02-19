@@ -1,8 +1,11 @@
 import NextcloudTalkBot from "nextcloud-talk-bot";
+import { Intent, MessageProperties } from "../models";
 import { Message } from "../types/nextcloud-talk";
 import { MessageGenerator } from "./MessageGenerator";
 import { MessageParser } from "./MessageParser";
 import { OpenWeatherClient } from "./OpenWeatherClient";
+
+const LANGUAGE = "de";
 
 /**
  * This class contains the bots logic.
@@ -32,18 +35,19 @@ export class OpenWeatherBot {
   public handleMessage(message: Message & { text: string }): void {
     const entities = this.messageParser.parse(message.text);
 
-    if (entities.intent === "none") {
-      return;
+    switch (entities.intent) {
+      case Intent.None:
+        break;
+      case Intent.Help:
+        this.showHelp(message.token);
+        break;
+      case Intent.WeatherToday:
+        this.showCurrent(entities.entities.location!, message.token); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        break;
+      default:
+        this.showForecast(entities.entities.location!, message.token); // eslint-disable-line @typescript-eslint/no-non-null-assertion
+        break;
     }
-
-    if (entities.intent === "forecast_weather" && entities.location) {
-      this.getForecast(entities.location)
-        .then((forecast) => this.bot.sendText(forecast, message.token))
-        .catch((error) => this.handleError(message.token, error.message));
-      return;
-    }
-
-    this.showHelp(message.token);
   }
 
   /**
@@ -51,10 +55,10 @@ export class OpenWeatherBot {
    * and creates a week forecast of it
    *
    * @param locationName The name of the location
-   * @returns The formatted forecast for the requested location
+   * @returns The forecast data for the requested location
    * @throws If an error occurs when accessing the OpenWeather API
    */
-  private async getForecast(locationName: string): Promise<string> {
+  private async getForecast(locationName: string): Promise<MessageProperties> {
     try {
       const locations = await this.openWeatherClient.getCoordinates(
         locationName
@@ -70,23 +74,35 @@ export class OpenWeatherBot {
         locations[0].lat,
         locations[0].lon,
         "metric",
-        "de"
+        LANGUAGE
       );
 
-      const properties = {
-        location: `${locations[0].name}, ${locations[0].country}`,
+      const localLocationName =
+        locations[0].local_names[LANGUAGE] || locations[0].name;
+
+      return {
+        location: `${localLocationName}, ${locations[0].country}`,
+        current: {
+          description: weatherData.current.weather[0].description,
+          icon: weatherData.current.weather[0].icon,
+          temp: Math.round(weatherData.current.temp),
+          feltTemp: Math.round(weatherData.current.feels_like),
+          windSpeed: weatherData.current.wind_speed,
+        },
         daily: weatherData.daily.map((day) => {
           return {
             date: day.dt,
             description: day.weather[0].description,
             icon: day.weather[0].icon,
-            minTemp: day.temp.min,
-            maxTemp: day.temp.max,
+            minTemp: Math.round(day.temp.min),
+            maxTemp: Math.round(day.temp.max),
+            morningTemp: Math.round(day.temp.morn),
+            dayTemp: Math.round(day.temp.day),
+            eveningTemp: Math.round(day.temp.eve),
+            nightTemp: Math.round(day.temp.night),
           };
         }),
       };
-
-      return this.messageGenerator.generateForecast(properties);
     } catch (error) {
       // TODO: provide meaningful error message
       console.error(error);
@@ -103,6 +119,38 @@ export class OpenWeatherBot {
   private handleError(conversationToken: string, errorMessage?: string): void {
     const response = this.messageGenerator.generateError(errorMessage);
     this.bot.sendText(response, conversationToken);
+  }
+
+  /**
+   * Sends a message with the current weather for the given location.
+   *
+   * @param locationName The name of the location
+   * @param conversationToken The token of the conversation
+   */
+  private showCurrent(locationName: string, conversationToken: string): void {
+    this.getForecast(locationName)
+      .then((forecast) => {
+        const forecastMessage = this.messageGenerator.generateCurrent(forecast);
+        this.bot.sendText(forecastMessage, conversationToken);
+      })
+      .catch((error) => this.handleError(conversationToken, error.message));
+  }
+
+  /**
+   * Sends a message with a one week weather forecast for the given location.
+   *
+   * @param locationName The name of the location
+   * @param conversationToken The token of the conversation
+   */
+  private showForecast(locationName: string, conversationToken: string): void {
+    this.getForecast(locationName)
+      .then((forecast) => {
+        const forecastMessage = this.messageGenerator.generateForecast(
+          forecast
+        );
+        this.bot.sendText(forecastMessage, conversationToken);
+      })
+      .catch((error) => this.handleError(conversationToken, error.message));
   }
 
   /**
