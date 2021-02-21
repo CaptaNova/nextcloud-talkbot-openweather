@@ -9,12 +9,12 @@
  * - German
  *
  * TODO:
- * - Show current weather
+ * - Send welcome message (including instructions) when joining a new conversation
+ * - Stop polling deleted conversations
+ * - Leave conversation, if the bot is the only member of it
+ * - Check license (AGPL, MIT)
  * - Write README (feature description (screenshot), setup instructions, architecture, contributing, versioning, license)
  * - Logging
- * - Poll conversations and join new ones (except 'changelog')
- * - Send welcome message (including instructions) when joining a new conversation
- * - Leave conversation, if the bot is the only member of it
  * - Set default location
  * - Internationalization
  */
@@ -26,13 +26,15 @@ import {
   OpenWeatherBot,
   OpenWeatherClient,
 } from "./services";
-import { Conversation, ConversationType } from "./types/nextcloud-talk";
+import { Conversation } from "./types/nextcloud-talk";
 import {
   NEXTCLOUD_URI,
   NEXTCLOUD_USER,
   NEXTCLOUD_PASSWORD,
   OPEN_WEATHER_API_KEY,
 } from "./util/secrets";
+
+const CONVERSATION_POLL_RATE = 45 * 1000;
 
 process.on("uncaughtException", (error) => {
   console.error(`Uncaught exception: ${error.message}`);
@@ -65,6 +67,41 @@ const weatherBot = new OpenWeatherBot(
 bot.on("message", (msg) => weatherBot.handleMessage(msg));
 joinConversations(bot);
 
+setInterval(() => {
+  getConversations(bot)
+    .then((conversations) => {
+      conversations
+        .filter(filterReadonlyConversations)
+        .filter(filterEmptyConversations)
+        .filter((conversation) => !bot.inChannel(conversation.token))
+        .forEach((conversation) => {
+          bot.joinChannel(conversation.token);
+          // weatherBot.handleNewConversation(conversation);
+        });
+    })
+    .catch(console.error);
+}, CONVERSATION_POLL_RATE);
+
+/**
+ * Filter function to exclude readonly conversations
+ *
+ * @param conversation A conversation
+ * @returns `FALSE` if the conversation is readonly, `TRUE` otherwise
+ */
+function filterReadonlyConversations(conversation: Conversation): boolean {
+  return !conversation.readOnly;
+}
+
+/**
+ * Filter function to exclude conversations with a single participant
+ *
+ * @param conversation A conversation
+ * @returns `FALSE` if the conversation has multiple participants, `TRUE` otherwise
+ */
+function filterEmptyConversations(conversation: Conversation): boolean {
+  return Object.keys(conversation.participants).length !== 1;
+}
+
 /**
  * Joins all conversations, except changelogs.
  * Afterwards it starts polling for new messages.
@@ -75,14 +112,13 @@ async function joinConversations(bot: NextcloudTalkBot): Promise<void> {
   getConversations(bot)
     .then((conversations) => {
       conversations
-        .filter((channel) => channel.type !== ConversationType.Changelog)
-        .filter((channel) => Object.keys(channel.participants).length !== 1)
-        .filter((channel) => !bot.inChannel(channel.token))
-        .forEach((channel) => bot.joinChannel(channel.token));
+        .filter(filterReadonlyConversations)
+        .filter(filterEmptyConversations)
+        .filter((conversation) => !bot.inChannel(conversation.token))
+        .forEach((conversation) => bot.joinChannel(conversation.token));
     })
-    .finally(() => {
-      bot.startPolling();
-    });
+    .catch(console.error)
+    .finally(() => bot.startPolling());
 }
 
 /**
@@ -90,25 +126,16 @@ async function joinConversations(bot: NextcloudTalkBot): Promise<void> {
  *
  * @param bot The Nextcloud Talk bot
  * @returns All conversations of the bots user
+ * @throws If an error occurs when loading the conversations
  */
 async function getConversations(
   bot: NextcloudTalkBot
-): Promise<Conversation[]> {
-  let conversations: Conversation[] = [];
+): Promise<Conversation[] | never> {
+  const response = await bot._request("room");
 
-  try {
-    const response = await bot._request("room");
-
-    if (response.type === "error") {
-      console.warn(response.response);
-    }
-
-    if (response.type === "response") {
-      conversations = response.data;
-    }
-  } catch (error) {
-    console.error(error);
+  if (response.type === "error") {
+    console.warn(response.response);
   }
 
-  return conversations;
+  return response.type === "response" ? response.data : [];
 }
