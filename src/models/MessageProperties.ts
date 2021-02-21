@@ -1,4 +1,7 @@
 export interface MessageProperties {
+  botDisplayName: string;
+  botUserName: string;
+  userDisplayName: string;
   location: string;
   current: {
     description: string;

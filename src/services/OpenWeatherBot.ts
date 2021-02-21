@@ -1,11 +1,17 @@
 import NextcloudTalkBot from "nextcloud-talk-bot";
 import { Intent, MessageProperties } from "../models";
-import { Message } from "../types/nextcloud-talk";
+import {
+  Conversation,
+  ConversationType,
+  Message,
+} from "../types/nextcloud-talk";
 import { MessageGenerator } from "./MessageGenerator";
 import { MessageParser } from "./MessageParser";
 import { OpenWeatherClient } from "./OpenWeatherClient";
 
 const LANGUAGE = "de";
+
+type UserInfo = { userName: string; displayName: string };
 
 /**
  * This class contains the bots logic.
@@ -51,6 +57,50 @@ export class OpenWeatherBot {
   }
 
   /**
+   * Handles a new conversation
+   *
+   * @param conversation The new conversation
+   * @since 0.1.0
+   */
+  public handleNewConversation(conversation: Conversation): void {
+    this.bot.joinChannel(conversation.token);
+
+    const botUser = this.getBotUser(conversation);
+    const messageProperties: Partial<MessageProperties> = {
+      botDisplayName: botUser.displayName,
+      botUserName: botUser.userName,
+    };
+
+    if (conversation.type === ConversationType.OneToOne) {
+      const user = this.getUser(conversation);
+      messageProperties.userDisplayName = user.displayName;
+
+      const response = this.messageGenerator.generatePersonalWelcome(
+        messageProperties
+      );
+      this.bot.sendText(response, conversation.token);
+    } else {
+      const response = this.messageGenerator.generateGroupWelcome(
+        messageProperties
+      );
+      this.bot.sendText(response, conversation.token);
+    }
+  }
+
+  /**
+   * Extracts the display name of the bot from the conversation
+   *
+   * @param conversation The conversation
+   * @returns The username and the display name of the bot user
+   */
+  private getBotUser(conversation: Conversation): UserInfo {
+    return {
+      userName: this.bot.user,
+      displayName: conversation.participants[this.bot.user].name,
+    };
+  }
+
+  /**
    * Retrieves the for weather data for the given location
    * and creates a week forecast of it
    *
@@ -58,7 +108,9 @@ export class OpenWeatherBot {
    * @returns The forecast data for the requested location
    * @throws If an error occurs when accessing the OpenWeather API
    */
-  private async getForecast(locationName: string): Promise<MessageProperties> {
+  private async getForecast(
+    locationName: string
+  ): Promise<Partial<MessageProperties>> {
     try {
       const locations = await this.openWeatherClient.getCoordinates(
         locationName
@@ -108,6 +160,27 @@ export class OpenWeatherBot {
       console.error(error);
       throw error;
     }
+  }
+
+  /**
+   * Extracts the username and the display name of the other participant from
+   * the conversation.
+   *
+   * This is only possible for one-to-one conversations.
+   * In group conversations this would just return the first participant.
+   *
+   * @param conversation The conversation
+   * @returns The username and the display name of the other participant
+   */
+  private getUser(conversation: Conversation): UserInfo {
+    const userEntry = Object.entries(conversation.participants).find(
+      ([userName]) => userName !== this.bot.user
+    );
+
+    return {
+      userName: userEntry ? userEntry[0] : "",
+      displayName: userEntry ? userEntry[1].name : "",
+    };
   }
 
   /**

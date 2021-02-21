@@ -9,7 +9,6 @@
  * - German
  *
  * TODO:
- * - Send welcome message (including instructions) when joining a new conversation
  * - Stop polling deleted conversations
  * - Leave conversation, if the bot is the only member of it
  * - Check license (AGPL, MIT)

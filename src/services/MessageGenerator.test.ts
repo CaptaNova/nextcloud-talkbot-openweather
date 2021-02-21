@@ -2,11 +2,13 @@ import { MessageProperties } from "../models";
 import { MessageGenerator } from "./MessageGenerator";
 
 const botUserName = "someBotUserName";
+const botDisplayName = "someBotDisplayName";
+const userDisplayName = "someUserDisplayName";
 const baseDate = new Date("2020-04-01T00:00:00Z").getTime() / 1000;
 const oneDay = 60 * 60 * 24;
 
 let sut: MessageGenerator;
-let properties: MessageProperties;
+let properties: Partial<MessageProperties>;
 
 beforeEach(() => {
   properties = {
@@ -60,6 +62,40 @@ describe(MessageGenerator.name, () => {
     expect(message).toContain("Forschungsreise");
   });
 
+  describe("returns a group welcome message", () => {
+    let message: string;
+
+    beforeEach(() => {
+      properties = { botDisplayName: botDisplayName, botUserName: botUserName };
+      message = sut.generateGroupWelcome(properties);
+    });
+
+    it("includes the bots display name", () => {
+      expect(message).toContain(botDisplayName);
+    });
+  });
+
+  describe("returns a personal welcome message", () => {
+    let message: string;
+
+    beforeEach(() => {
+      properties = {
+        botDisplayName: botDisplayName,
+        botUserName: botUserName,
+        userDisplayName: userDisplayName,
+      };
+      message = sut.generatePersonalWelcome(properties);
+    });
+
+    it("includes the bots display name", () => {
+      expect(message).toContain(botDisplayName);
+    });
+
+    it("includes the users display name", () => {
+      expect(message).toContain(userDisplayName);
+    });
+  });
+
   describe("returns the current weather", () => {
     let message: string;
 
@@ -81,12 +117,12 @@ describe(MessageGenerator.name, () => {
 
     it("includes the felt temperature", () => {
       expect(message).toMatch(
-        new RegExp(`Fühlt.*${properties.current.feltTemp}`)
+        new RegExp(`Fühlt.*${properties.current!.feltTemp}`)
       );
     });
 
     it("includes the description", () => {
-      expect(message).toContain(properties.current.description);
+      expect(message).toContain(properties.current!.description);
     });
 
     it("includes a textual description of the wind speed", () => {
@@ -95,25 +131,25 @@ describe(MessageGenerator.name, () => {
 
     it("includes the morning temperature", () => {
       expect(message).toMatch(
-        new RegExp(`morgens:\\s*${properties.daily[0].morningTemp}`)
+        new RegExp(`morgens:\\s*${properties.daily![0].morningTemp}`)
       );
     });
 
     it("includes the day temperature", () => {
       expect(message).toMatch(
-        new RegExp(`mittags:\\s*${properties.daily[0].dayTemp}`)
+        new RegExp(`mittags:\\s*${properties.daily![0].dayTemp}`)
       );
     });
 
     it("includes the evening temperature", () => {
       expect(message).toMatch(
-        new RegExp(`abends:\\s*${properties.daily[0].eveningTemp}`)
+        new RegExp(`abends:\\s*${properties.daily![0].eveningTemp}`)
       );
     });
 
     it("includes the night temperature", () => {
       expect(message).toMatch(
-        new RegExp(`nachts:\\s*${properties.daily[0].nightTemp}`)
+        new RegExp(`nachts:\\s*${properties.daily![0].nightTemp}`)
       );
     });
   });

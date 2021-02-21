@@ -111,7 +111,7 @@ export interface Conversation {
   objectId: string;
 
   // TODO: undocumented property
-  participants: { [userName: string]: string };
+  participants: { [userName: string]: Participant };
 
   // TODO: guestList: any
 }
@@ -155,6 +155,13 @@ export interface Message {
 
   /** See Parent data below */
   parent?: [];
+}
+
+export interface Participant {
+  name: string;
+  type: ParticipantType;
+  call: 0;
+  sessionId: string;
 }
 
 export enum ActorType {
